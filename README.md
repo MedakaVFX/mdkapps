@@ -1,0 +1,2 @@
+# mdkapplibs
+App用Pythonライブラリ
