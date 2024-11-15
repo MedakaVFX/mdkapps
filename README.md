@@ -20,12 +20,14 @@ App互換Pythonライブラリ
 ```python
 import mdkapps
 
-_filepath = r'C:\Users\ta_yamagishi\temp\test.png'
+_filepath = r'C:\Users\ta_yamagishi\temp\test'
 _size = [1920, 1080]
 _range = [1001, 1200]
 
-mdkapps.create_playblast(_filepath, _size, _range)
+mdkapps.create_playblast(_filepath, _size, _range, filetype='png')
 ```
+
+Using in Maya
 <img width="400" src="https://i.gyazo.com/395cadc7f2596a3bb8e4d7a36861b3e2.png">
 
 

@@ -63,7 +63,7 @@ def clear_plugins():
 
 
 
-def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=None):
+def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=None, filetype='jpg'):
     """ プレイブラストを作成
     
     Args:
@@ -78,8 +78,7 @@ def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=Non
     }
     
     _startframe, _endframe = range
-    _extension = filepath.split('.')[-1] if '.' in filepath else ''
-    cmds.setAttr ('defaultRenderGlobals.imageFormat', _FILE_FORMATS[_extension.lower()])
+    cmds.setAttr ('defaultRenderGlobals.imageFormat', _FILE_FORMATS[filetype])
 
     
 
