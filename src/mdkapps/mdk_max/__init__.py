@@ -28,7 +28,7 @@ if os.environ.get('MDK_DEBUG'):
     print('MDK | ---------------------------')
 
 
-def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=None):
+def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=None, filetype='jpg'):
     """ プレイブラストを作成
     
     Args:
