@@ -8,7 +8,7 @@ Info:
     * Author : MedakaVFX <medaka.vfx@gmail.com>
  
 Release Note:
-    * v0.0.1 2025-01-09 Tatsuya Yamagishi
+    * v0.0.1 2025-01-15 Tatsuya Yamagishi
 """
 
 VERSION = 'v0.0.1'
@@ -67,12 +67,12 @@ class AppMain:
     # --------------------------------- #
     # Get / Set
     # --------------------------------- #
-    def get_ext(self, key: str) -> str:
+    def get_ext(self, key: str = None) -> str:
         """ 拡張子を返す 
         
         """
         if key is None:
-            return '.txt'
+            return '.dat'
         
         if type(key) is not str:
             raise TypeError('key is not str.')
@@ -89,10 +89,37 @@ class AppMain:
         """現在開いているファイルパスを取得"""
         return None
     
+
+    def get_selected_nodes(self) -> list[str]:
+        """ 選択しているノードを取得 """
+        return ['root', 'root/geo']
+    
     # --------------------------------- #
     # I/O
     # --------------------------------- #
+    def import_file(self, filepath: str):
+        print(f'MDK | import = {filepath}')
+
+
+    def import_files(self, filepath_list: list[str]):
+        for _filepath in filepath_list:
+            self.import_file(_filepath)
+
+
+    def save(self):
+        """ 上書き保存 """
+        pass
+    
+    
     def save_file(self, filepath):
-        _file = pathlib.Path(filepath)
+        _filepath = pathlib.Path(filepath)
         # _file.parent.mkdir(parents=True, exist_ok=True)
-        _file.write_text('Medaka', encoding='utf8')
+        _filepath.write_text('Medaka', encoding='utf8')
+
+
+    def save_selection(self, filepath: str):
+        """ 選択を保存 """
+        _nodes = self.get_selected_nodes()
+
+        _filepath = pathlib.Path(filepath)
+        _filepath.write_text(str(_nodes), encoding='utf8')
