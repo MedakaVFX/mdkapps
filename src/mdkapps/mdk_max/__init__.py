@@ -38,3 +38,13 @@ def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=Non
     """
 
     raise RuntimeError('未実装')
+
+
+
+# ======================================= #
+# Class
+# ======================================= #
+class AppMain:
+    def __init__(self):
+        pass
+

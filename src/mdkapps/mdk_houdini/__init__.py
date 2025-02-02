@@ -8,7 +8,7 @@ Info:
     * Author : MedakaVFX <medaka.vfx@gmail.com>
  
 Release Note:
-    * v0.0.1 2025-01-17 Tatsuya Yamagishi
+    * v0.0.1 2025-01-25 Tatsuya Yamagishi
         * New
 """
 
@@ -126,7 +126,15 @@ class AppMain:
     
 
     def get_filepath(self) -> str:
-        hou.hipFile.path()
+        return hou.hipFile.path()
+
+
+    def get_framerange(self) -> tuple[int]:
+        """ Plugin Builtin Function """
+        head_in, tail_out = hou.playbar.frameRange()
+        cut_in, cut_out = hou.playbar.frameRange()
+
+        return head_in, cut_in, cut_out, tail_out
     
 
     def get_main_window(self):
