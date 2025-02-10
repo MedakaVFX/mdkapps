@@ -1,6 +1,6 @@
-""" mdklibs
+""" mdkapps
  
-* VFX用Pythonパッケージ
+* VFX用 APP互換 Pythonパッケージ
 
 Info:
     * Created : v0.0.1 2024-11-01 Tatsuya YAMAGISHI
@@ -8,11 +8,16 @@ Info:
     * Author : MedakaVFX <medaka.vfx@gmail.com>
  
 Release Note:
-    * v0.0.1 2024-11-01 Tatsuya Yamagishi
-        * added: path
+    * v0.0.3 2025-02-04 Tatsuya Yamagishi
+        * updated : mdk_maya
+    * v0.0.2 2025-02-03 Tatsuya Yamagishi
+        * updated : mdk_maya 
+
+    * v0.0.1 2025-01-03 Tatsuya Yamagishi
+        * New
 """
 
-VERSION = 'v0.0.1'
+VERSION = 'v0.0.3'
 NAME = 'mdkapps'
 
 import os
