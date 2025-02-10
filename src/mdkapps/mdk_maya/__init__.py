@@ -16,7 +16,7 @@ Release Note:
         * upateed : ファイル判定関数
 
     * v0.0.1 (v0.0.1) 2025-01-31 Tatsuya Yamagishi
-        * New
+
 """
 
 VERSION = 'v0.0.3'
@@ -236,6 +236,7 @@ class AppMain:
         # cmds.AbcImport(filepath, mode="import", rpr=_selection[0], merge=True)
 
 
+
     def add_recent_file(self, filepath: str):
         filepath = filepath.replace('\\','/') 
         _filename, _ext = os.path.splitext(filepath)
@@ -395,6 +396,7 @@ class AppMain:
             self.save_selection(filepath)
         else:
             raise TypeError('MDK | Not supported file type')
+
 
 
     def export_usd(
@@ -642,6 +644,7 @@ class AppMain:
 
 
         
+
     def is_abc(self, filepath: str) -> tuple:
         """ Alembicファイル判定 """
         return FILE_FILTER_ABC.match(filepath)
@@ -650,6 +653,7 @@ class AppMain:
         """ Alembicファイル判定 """
         return FILE_FILTER_FBX.match(filepath)
         
+
     def is_image(self, filepath: str) -> tuple:
         """ イメージファイル判定 """
         return FILE_FILTER_IMAGE.match(filepath)
@@ -657,10 +661,12 @@ class AppMain:
     def is_maya(self, filepath: str) -> tuple:
         """ Mayaファイル判定 """
         return FILE_FILTER_MAYA.match(filepath)
+
        
     def is_obj(self, filepath: str) -> tuple:
         """ Objファイル判定 """
         return FILE_FILTER_OBJ.match(filepath)
+
     
     def is_usd(self, filepath: str) -> tuple:
         """ USDファイル判定 """
