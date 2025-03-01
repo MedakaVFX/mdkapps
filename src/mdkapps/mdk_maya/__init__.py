@@ -8,11 +8,18 @@ Info:
     * Author : MedakaVFX <medaka.vfx@gmail.com>
  
 Release Note:
-    * v0.0.1 2025-01-31 Tatsuya Yamagishi
-        * New
+    * v0.0.3 (v0.0.3) 2025-02-07 Tatsuya Yamagishi
+        * added : apply_alembic_cache()
+
+    * v0.0.2 (v0.0.2) 2025-02-03 Tatsuya Yamagishi
+        * fixed : export_nodes()
+        * upateed : ファイル判定関数
+
+    * v0.0.1 (v0.0.1) 2025-01-31 Tatsuya Yamagishi
+
 """
 
-VERSION = 'v0.0.1'
+VERSION = 'v0.0.3'
 NAME = 'mdk_maya'
 
 #=======================================#
@@ -41,6 +48,7 @@ except:
     from qtpy import QtCore, QtGui, QtWidgets
 
 from maya import OpenMayaUI as omui 
+
 try:
     from shiboken2 import wrapInstance
 except:
@@ -81,11 +89,13 @@ EXT_DICT = {
 }
 
 FILE_FILTER_ABC = re.compile(r'.+\.(abc)')
+FILE_FILTER_FBX = re.compile(r'.+\.(fbx)')
 FILE_FILTER_USD = re.compile(r'.+\.(usd|usdc|usda)')
 FILE_FILTER_IMAGE = re.compile(r'.+\.(png|jpeg|jpg|tif|tiff|exr|tx|hdr)')
 FILE_FILTER_IMAGE_SDR = re.compile(r'.+\.(bmp|gif|png|jpeg|jpg|svg|tif|tiff)')
 FILE_FILTER_MAYA = re.compile(r'.+\.(ma|mb|abc|fbx|obj)')
 FILE_FILTER_MEDIA = re.compile(r'.+\.(bmp|png|jpeg|jpg|svg|tif|tiff|exr|mp4|mp3|pdf|mov|mkv)')
+FILE_FILTER_OBJ = re.compile(r'.+\.(obj)')
 FILE_FILTER_RAW = re.compile(r'.+\.(cr2|cr3|dng|CR2|CR3|DNG)')
 FILE_FILTER_SCRIPT = re.compile(r'.+\.(py)')
 FILE_FILTER_TEXT = re.compile(r'.+\.(doc|txt|text|json|py|usda|nk|sh|zsh|bat)')
@@ -203,6 +213,29 @@ def open_in_explorer(filepath: str):
 class AppMain:
     def __init__(self):
         pass
+
+    def apply_alembic_cache(self, filepath: str):
+        # 選択しているオブジェクトを取得
+        _selection = cmds.ls(sl=True)
+        
+        if not _selection:
+            cmds.warning("オブジェクトを選択してください。")
+            return
+        
+        # for _obj in _selection:
+        #     _shape = cmds.listRelatives(_obj, shapes=True)
+        #     if not _shape:
+        #         cmds.warning(f"{_obj} have not shape node.")
+        #         continue
+            
+        #     _shape = _shape[0]
+            
+        # Alembicキャッシュを適用
+        print(f'Apply Alembic Cache: {filepath}')
+        cmds.AbcImport(filepath, mode="import", connect=_selection[0])
+        # cmds.AbcImport(filepath, mode="import", rpr=_selection[0], merge=True)
+
+
 
     def add_recent_file(self, filepath: str):
         filepath = filepath.replace('\\','/') 
@@ -352,8 +385,18 @@ class AppMain:
                     startframe=None,
                     endframe=None):
         
-        cmds.select(nodes)
-        self.save_selection(filepath)
+        if self.is_abc(filepath):
+            self.export_abc(filepath, nodes, startframe, endframe)
+        elif self.is_fbx(filepath):
+            self.export_fbx(filepath, nodes, startframe, endframe)
+        elif self.is_obj(filepath):
+            self.save_selection(filepath, nodes, startframe, endframe)
+        elif self.is_maya(filepath):
+            cmds.select(nodes)
+            self.save_selection(filepath)
+        else:
+            raise TypeError('MDK | Not supported file type')
+
 
 
     def export_usd(
@@ -601,6 +644,16 @@ class AppMain:
 
 
         
+
+    def is_abc(self, filepath: str) -> tuple:
+        """ Alembicファイル判定 """
+        return FILE_FILTER_ABC.match(filepath)
+        
+    def is_fbx(self, filepath: str) -> tuple:
+        """ Alembicファイル判定 """
+        return FILE_FILTER_FBX.match(filepath)
+        
+
     def is_image(self, filepath: str) -> tuple:
         """ イメージファイル判定 """
         return FILE_FILTER_IMAGE.match(filepath)
@@ -608,6 +661,12 @@ class AppMain:
     def is_maya(self, filepath: str) -> tuple:
         """ Mayaファイル判定 """
         return FILE_FILTER_MAYA.match(filepath)
+
+       
+    def is_obj(self, filepath: str) -> tuple:
+        """ Objファイル判定 """
+        return FILE_FILTER_OBJ.match(filepath)
+
     
     def is_usd(self, filepath: str) -> tuple:
         """ USDファイル判定 """
