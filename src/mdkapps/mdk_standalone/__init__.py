@@ -153,7 +153,7 @@ class AppMain:
     # I/O
     # --------------------------------- #
     def import_file(self, filepath: str):
-        print(f'MDK | import = {filepath}')
+        print(f'MDK | Standard | import = {filepath}')
 
 
     def import_files(self, filepath_list: list[str]):

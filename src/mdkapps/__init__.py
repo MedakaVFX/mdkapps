@@ -9,7 +9,12 @@ Info:
  
 Release Note:
     * v0.0.3 2025-02-04 Tatsuya Yamagishi
+
+        * fixed : import mdk_b3d
         * updated : mdk_maya
+        
+        * updated : mdk_maya
+
     * v0.0.2 2025-02-03 Tatsuya Yamagishi
         * updated : mdk_maya 
 
@@ -36,14 +41,16 @@ try:
    """ Import Blender """
    import bpy
    print('MDK | Successfully imported Blender Python API bpy')
-   from mdk_maya import *
+   from .mdk_b3d import *
 
+# except Exception as ex:
+#     raise RuntimeError(ex)
 
 except ImportError:
     try:
         """ Improt Cinema4D """
         import c4d
-        from mdk_c4d import *
+        from .mdk_c4d import *
 
         print('MDK | Successfully imported Cinema4D Python API c4d')
 
