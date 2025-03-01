@@ -9,9 +9,12 @@ Info:
  
 Release Note:
     * v0.0.3 2025-02-04 Tatsuya Yamagishi
+
         * fixed : import mdk_b3d
         * updated : mdk_maya
         
+        * updated : mdk_maya
+
     * v0.0.2 2025-02-03 Tatsuya Yamagishi
         * updated : mdk_maya 
 
