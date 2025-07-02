@@ -13,8 +13,8 @@ App互換Pythonライブラリ
 | Standalone | |
 
 
-## v0.0.1 20YY/MM/DD
-- added : new
+## v0.0.1 2025/05/22
+- added : New
 
 ## Examples
 ```python

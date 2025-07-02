@@ -16,10 +16,15 @@ VERSION = 'v0.0.1'
 NAME = 'mdk_b3d'
 
 import os
+import pathlib
+import platform
 import re
+import subprocess
 import sys
 
+
 import bpy
+
 
 if os.environ.get('MDK_DEBUG'):
     print('MDK | ---------------------------')
@@ -49,9 +54,11 @@ EXT_DICT = {
     'shot': '.b3d',
     'usd': '.usd',
 }
-#=======================================#
+
+
+# ======================================= #
 # Functions
-#=======================================#
+# ======================================= #
 def context_window(func):
     """
     Reference from : https://blender.stackexchange.com/questions/269960/bpy-context-object-changes-within-pyside2-button-callback
@@ -78,9 +85,33 @@ def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=Non
 
     raise RuntimeError('未実装')
 
-#=======================================#
+
+def open_dir(filepath):
+    """
+    フォルダを開く
+    """
+    _filepath = pathlib.Path(filepath)
+    OS_NAME = platform.system()
+
+    if _filepath.exists():
+        if _filepath.is_file():
+            _filepath = _filepath.parent
+
+        if OS_NAME == 'Windows':
+            cmd = 'explorer {}'.format(str(_filepath))
+            subprocess.Popen(cmd)
+
+        elif OS_NAME == 'Darwin':
+            subprocess.Popen(['open', _filepath])
+
+        else:
+            subprocess.Popen(["xdg-open", _filepath])
+
+
+
+# ======================================= #
 # Class
-#=======================================#
+# ======================================= #
 class AppMain:
     def __init__(self):
         pass
@@ -93,6 +124,10 @@ class AppMain:
         return list(EXT_LIST)
     
 
+    def get_filepath(self) -> str:
+        return bpy.context.blend_data.filepath
+
+
     def get_framerange(self):
         """ フレームレンジを取得
         """
@@ -100,6 +135,15 @@ class AppMain:
         _end_frame = bpy.context.scene.frame_end
         return _start_frame, _start_frame, _end_frame, _end_frame
     
+
+    def get_selected_nodes(self):
+        """ 選択中のオブジェクトをリストとして取得 
+        # selected_objects = bpy.context.selected_objects
+        # selected_objects = plugin.context.selected_objects
+        """
+        return [_obj for _obj in bpy.context.scene.objects if _obj.select_get() ] 
+    
+
     @context_window
     def import_abc(self, filepath: str):
         """
@@ -164,6 +208,23 @@ class AppMain:
     def is_usd(self, filepath: str) -> tuple:
         """ USDファイル判定 """
         return FILE_FILTER_USD.match(filepath)
+    
+
+    
+
+    def open_dir(self):
+        """ Plugin Builtin Function """
+        _nodes = self.get_selected_nodes()
+
+        if _nodes:
+            raise NotImplementedError('未実装')
+        else:
+            _filepath = self.get_filepath()
+            open_dir(_filepath)
+
+    def open_file(self, filepath, recent=False):
+        """ Plugin Builtin Function """
+        bpy.ops.wm.open_mainfile(filepath=filepath)  
     
 
     @context_window

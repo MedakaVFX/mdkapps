@@ -18,6 +18,7 @@ NAME = 'mdk_standalone'
 import os
 import pathlib
 import platform
+import re
 import subprocess
 import sys
 
@@ -46,29 +47,16 @@ EXT_DICT = {
     'usd': '.usd',
 }
 
+FILE_FILTER_SCRIPT = re.compile(r'.+\.(py)')
 # ======================================= #
 # Functions
 # ======================================= #
-def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=None):
-    """ プレイブラストを作成
-    
-    Args:
-        filepath(str): 出力ファイルパス
-        size(list | turple): サイズ
-        range(list | turple): サイズ
-    """
-
-    print(f'MDK | {filepath=}')
-    print(f'MDK | {size=}')
-    print(f'MDK | {range=}')
-
-
 # ======================================= #
 # Class
 # ======================================= #
 class AppMain:
     def __init__(self):
-        pass
+        self.FILE_FILTER_SCRIPT = FILE_FILTER_SCRIPT
 
     # --------------------------------- #
     # Get / Set
@@ -87,6 +75,10 @@ class AppMain:
         return EXT_DICT.get(key.lower())
     
 
+    def get_default_ext(self) -> str:
+        """ デフォルト拡張子を返す """
+        return '.txt'
+
     def get_ext_list(self):
         """ 拡張子リストを返す"""
         return list(EXT_LIST)
@@ -104,6 +96,8 @@ class AppMain:
         """現在開いているファイルパスを取得"""
         return None
     
+    def get_fps(self) -> float:
+        return 24.000
     
     def get_framerange(self) -> tuple[int]:
         """フレームレンジを取得"""
@@ -112,12 +106,32 @@ class AppMain:
     def get_render_size(self) -> tuple[int]:
         """ レンダーサイズを取得 """
         return (1920, 1080)
-    
 
     def get_selected_nodes(self) -> list[str]:
         """ 選択しているノードを取得 """
         return ['root', 'root/geo']
     
+    def set_aperture_size(self, values: tuple[int]):
+        print(f'MDK | aperture_size = {values}')
+
+    def set_fps(self, value: str):
+        print(f'MDK | fps = {value}')
+
+    def set_framerange(self, values: tuple[int]):
+        print(f'MDK | framerange = {values}')
+
+    def set_render_size(self, values: tuple[int]):
+        print(f'MDK | render_size = {values}')
+
+    def set_render(self, value: str):
+        print(f'MDK | render = {value}')
+
+    def set_render_framerange(self, first: int, last: int):
+        print(f'MDK | render_framerange = {first} - {last}')
+
+    def set_unit(self, value: str):
+        print(f'MDK | unit = {value}')
+
     # --------------------------------- #
     # Methods
     # --------------------------------- #
@@ -159,6 +173,10 @@ class AppMain:
     def import_files(self, filepath_list: list[str]):
         for _filepath in filepath_list:
             self.import_file(_filepath)
+
+    def import_usd(self, filepath: str):
+        print(f'MDK | USD | import = {filepath}')
+
 
     def open_file(self, filepath: str):
         print(f'MDK | open = {filepath}')

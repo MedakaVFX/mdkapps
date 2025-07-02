@@ -8,7 +8,7 @@ Info:
     * Author : MedakaVFX <medaka.vfx@gmail.com>
  
 Release Note:
-    * v0.0.1 2025-01-25 Tatsuya Yamagishi
+    * v0.0.1 2025-06-17 Tatsuya Yamagishi
         * New
 """
 
@@ -18,6 +18,8 @@ NAME = 'mdk_houdini'
 import os
 import re
 import pathlib
+import platform
+import subprocess
 import sys
 
 import hou
@@ -34,6 +36,7 @@ if os.environ.get('MDK_DEBUG'):
 # ======================================= #
 EXT = {
     'hindie': '.hiplc',
+    'houdinifx': '.hip',
 }
 
 EXT_LIST = [
@@ -66,6 +69,7 @@ FILENODE_DICT = {
     'rop_geometry': 'sopoutput',
     'usdexport': 'lopoutput',
     'usd_rop': 'lopoutput',
+    'volume': 'filepath1',
 }
 
 # ======================================= #
@@ -83,13 +87,81 @@ def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=Non
     raise RuntimeError('未実装')
 
 
+def open_dir(filepath):
+    """
+    フォルダを開く
+    """
+    _filepath = pathlib.Path(filepath)
+    OS_NAME = platform.system()
+
+    if _filepath.exists():
+        if _filepath.is_file():
+            _filepath = _filepath.parent
+
+        if OS_NAME == 'Windows':
+            cmd = 'explorer {}'.format(str(_filepath))
+            subprocess.Popen(cmd)
+
+        elif OS_NAME == 'Darwin':
+            subprocess.Popen(['open', _filepath])
+
+        else:
+            subprocess.Popen(["xdg-open", _filepath])
+
+
+def open_in_explorer(filepath: str):
+    """
+    Explorerでフォルダを開く
+    """
+    if os.path.exists(filepath):
+        if platform.system() == 'Windows':
+            filepath = str(filepath)
+            filepath = filepath.replace('/', '\\')
+
+            filebrowser = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
+            subprocess.run([filebrowser, '/select,', os.path.normpath(filepath)])
+        
+        elif platform.system() == 'Darwin':
+            subprocess.call(['open', filepath])
+        
+        else:
+            subprocess.Popen(["xdg-open", filepath])
+    else:
+        raise FileNotFoundError(f'File is not found.')
+        
 # ======================================= #
 # Class
 # ======================================= #
 class AppMain:
     def __init__(self):
-        pass
+        self._unit_scale = 0.01
     
+
+    def create_playblast(
+            self,
+            filepath,
+            size: tuple[int]|list[int],
+            framerange: tuple[int],
+        ):
+
+
+        _cur_desktop = hou.ui.curDesktop()
+        _scene = _cur_desktop.paneTabOfType(hou.paneTabType.SceneViewer)
+        if not _scene:
+            return
+
+        if not _scene.isCurrentTab():
+            _scene.setIsCurrentTab()
+
+
+        _flip_options = _scene.flipbookSettings().stash()
+        _flip_options.resolution(size) 
+        _flip_options.outputToMPlay(False)
+        _flip_options.frameRange(framerange)
+        _flip_options.output(filepath)
+        _scene.flipbook(_scene.curViewport(), _flip_options)
+
+
 
     def get_current_network_path(self):
         """ 現在のNetwork Editorを取得 """
@@ -105,6 +177,21 @@ class AppMain:
 
         if _network_path:
             return hou.node(_network_path)
+        
+
+    def get_default_ext(self) -> str:
+        """ 拡張子を返す 
+        
+        
+        """
+        EXT_DICT = {
+            'hindie': '.hiplc',
+            'houdinifx': '.hiplc',
+            }
+        
+        _mode = hou.applicationName()
+        
+        return EXT_DICT[_mode]
         
 
     def get_ext(self, key: str = None) -> str:
@@ -127,6 +214,12 @@ class AppMain:
 
     def get_filepath(self) -> str:
         return hou.hipFile.path()
+    
+
+    def get_fps(self) -> float:
+        """ Plugin Builtin Function """
+        return hou.fps()
+        
 
 
     def get_framerange(self) -> tuple[int]:
@@ -318,12 +411,45 @@ class AppMain:
     def is_vdb(self, filepath: str):
         """ VDBファイル判定 """
         return FILE_FILTER_VBD.match(filepath)
+    
+
+    def open_dir(self):
+        print('MDK | Open Dir')
+
+        nodes = hou.selectedNodes()
+
+        if len(nodes)==0:
+            _filepath = hou.hipFile.path()
+            _filepath.replace(':SDF_FORMAT_ARGS:format=usda', '')
+
+            print(f'MDK | File = {_filepath}')
+            
+            if os.path.exists(_filepath):
+                open_in_explorer(_filepath)
+
+        else:
+            for node in nodes:
+                filepath_list = []
+                node_type = node.type().name()
+
+                print(f'MDK | Nodetype = {node_type}')
+
+                if node_type in sorted(FILENODE_DICT):
+                    key = FILENODE_DICT.get(node_type)
+                    filepath_list.append(node.parm(key).eval())
+                
+                print(filepath_list)
+
+                for _filepath in filepath_list:
+                    _filepath = _filepath.replace(':SDF_FORMAT_ARGS:format=usda', '')
+                    open_dir(_filepath)
 
 
 
         
     def optimize_name(self, value: str):
         return re.sub('[.]', '_', str(value))
+
 
     def save_file(self, filepath):
         """ Plugin Builtin Function
@@ -347,3 +473,30 @@ class AppMain:
 
 
         _root_node.saveItemsToFile(_nodes, filepath)
+
+
+    def set_fps(self, value: float):
+        hou.setFps(int(value+0.05))
+
+
+    def set_framerange(self, headin: int, cutin: int, cutout: int, tailout: int):
+        """ フレームレンジを設定 """
+        hou.playbar.setPlaybackRange(cutin, cutout)     # 再生範囲
+        hou.playbar.setFrameRange(headin, tailout)
+
+
+
+    def set_unit(self, unit: str):
+        """ 単位を設定
+
+        * houdiniは単位設定がないのでpass
+        
+        """
+        unit_dict = {
+            'centimeter': 0.01,
+            'millimeter': 0.001,
+            'meter': 1.0,
+            'kilometer': 1000.0,
+        }
+
+        self._unit_scale = unit_dict.get(unit)
