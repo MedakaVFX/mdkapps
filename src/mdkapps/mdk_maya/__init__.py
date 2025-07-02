@@ -6,15 +6,20 @@ Info:
     * Created : v0.0.1 2024-11-15 Tatsuya YAMAGISHI
     * Coding : Python 3.12.4 & PySide6
     * Author : MedakaVFX <medaka.vfx@gmail.com>
- 
-Release Note:
-    * v0.0.3 (v0.0.3) 2025-02-07 Tatsuya Yamagishi
-        * added : apply_alembic_cache()
 
+    
+Release Note:
+    * v0.0.3 (v0.0.3) 2025-06-24 Tatsuya Yamagishi
+        * added: apply_alembic_cache()
+        * added: set_aperture_size()
+        * added: set_unit()
+
+        
     * v0.0.2 (v0.0.2) 2025-02-03 Tatsuya Yamagishi
         * fixed : export_nodes()
         * upateed : ファイル判定関数
 
+        
     * v0.0.1 (v0.0.1) 2025-01-31 Tatsuya Yamagishi
 
 """
@@ -38,9 +43,17 @@ import sys
 import maya.cmds as cmds
 import maya.mel as mel
 
+from maya.app.renderSetup.model import selector
+from maya.app.renderSetup.model import renderLayer
+from maya.app.renderSetup.model import renderSetup
+import maya.app.renderSetup.views.renderSetupPreferences as prefs
+from maya.app.renderSetup.model import typeIDs
+
+
 import mayaUsd.ufe
 import mayaUsd.lib
 import mayaUsd_createStageWithNewLayer
+
 
 try:
     from PySide6 import QtCore, QtGui, QtWidgets
@@ -104,39 +117,12 @@ FILE_FILTER_TEXT = re.compile(r'.+\.(doc|txt|text|json|py|usda|nk|sh|zsh|bat)')
 #=======================================#
 # Functions
 #=======================================#
-def clear_plugins():
-    """ 不要なプラグインデータを削除 """
-    print('MDK | [Clear Plugins]')
-
-    plugs_ = cmds.unknownPlugin(q=True, list=True)
-
-    if not plugs_ is None:
-        plugs_.sort()
-
-        for plug_ in plugs_:
-            try:
-                cmds.unknownPlugin(plug_, remove=True)
-            except Exception as error:
-                print('MDK | === error ===')
-                print('type:' + str(type(error)))
-                print('args:' + str(error.args))
-
-
-    nodes_ = cmds.ls(type='unknown')
-    if nodes_:
-        for node_ in nodes_:
-            try:
-                cmds.delete(node_)
-                print('//Delete unknownNode: ' + node_)
-
-            except Exception as error:
-                print('MDK | === error ===')
-                print('type:' + str(type(error)))
-                print('args:' + str(error.args))
-
-
-
-def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=None, filetype='jpg'):
+def create_playblast(
+            filepath: str,
+            size: list|tuple=None,
+            range: list|tuple=None,
+            filetype='jpg'
+):
     """ プレイブラストを作成
     
     Args:
@@ -250,21 +236,55 @@ class AppMain:
             mel.eval(cmd)
 
 
+
+    def clear_plugins(self):
+        """ 不要なプラグインデータを削除 """
+        print('MDK | [Clear Plugins]')
+
+        plugs_ = cmds.unknownPlugin(q=True, list=True)
+
+        if not plugs_ is None:
+            plugs_.sort()
+
+            for plug_ in plugs_:
+                try:
+                    cmds.unknownPlugin(plug_, remove=True)
+                except Exception as error:
+                    print('MDK | === error ===')
+                    print('type:' + str(type(error)))
+                    print('args:' + str(error.args))
+
+
+        nodes_ = cmds.ls(type='unknown')
+        if nodes_:
+            for node_ in nodes_:
+                try:
+                    cmds.delete(node_)
+                    print('//Delete unknownNode: ' + node_)
+
+                except Exception as error:
+                    print('MDK | === error ===')
+                    print('type:' + str(type(error)))
+                    print('args:' + str(error.args))
+
+
+                    
     def create_playblast(
                 self,
                 filepath: str,
                 name: str,
                 size: list|tuple=None,
                 framerange: list|tuple=None,
-                ext: str = '.jpg',):
+                ext: str = 'jpg',):
         
         """
         * defaultRenderGlobals.imageFormat
+        
         """
 
         _file_format_dict = {
-            '.jpg': 8,
-            '.png:': 32,
+            'jpg': 8,
+            'png': 32,
         }
         
         print('# --------------------------------- #')
@@ -387,10 +407,12 @@ class AppMain:
         
         if self.is_abc(filepath):
             self.export_abc(filepath, nodes, startframe, endframe)
+        
         elif self.is_fbx(filepath):
             self.export_fbx(filepath, nodes, startframe, endframe)
-        elif self.is_obj(filepath):
-            self.save_selection(filepath, nodes, startframe, endframe)
+        # elif self.is_obj(filepath):
+        #     # self.save_selection(filepath, nodes, startframe, endframe)
+        #     self.save_selection(filepath, nodes)
         elif self.is_maya(filepath):
             cmds.select(nodes)
             self.save_selection(filepath)
@@ -489,14 +511,22 @@ class AppMain:
         """ 拡張子リストを返す"""
         return list(EXT_LIST)
     
-    
+
+    def get_basename(self) -> str:
+        """ 現在開いているファイルのベース名を取得 """
+        _filepath = self.get_filepath()
+
+        if _filepath:
+            return pathlib.Path(_filepath).stem
+
+
     def get_filename(self) -> str:
         """現在開いているファイル名を取得"""
         _filepath = self.get_filepath()
 
         if _filepath:
             return pathlib.Path(_filepath).name
-
+        
     
 
     def get_filepath(self) -> str:
@@ -576,13 +606,17 @@ class AppMain:
 
         
 
-    def get_selected_nodes(self) -> list[str]:
+    def get_selected_nodes(self, long=True) -> list[str]:
         """ 選択しているノードを返す
+
+        Args:
+            long(bool): True: フルパス, False: ノード名のみ
         
         Returns:
             list[str]: 選択しているノードリスト
         """
-        return cmds.ls(sl=True)
+        return cmds.ls(sl=True, long=long)
+
 
 
     def import_file(self, filepath, namespace=None):    
@@ -746,6 +780,21 @@ class AppMain:
         cmds.select(nodes, r=True)
 
 
+    def set_aperture_size(self, width: float, height: float):
+        """ カメラのアパーチャサイズを設定
+        
+        Args:
+            width(float): 幅(mm)
+            height(float): 高さ(mm)
+        """
+        _camera_shape = self.get_camera_shape_from_selection()
+
+        if _camera_shape:
+            cmds.setAttr(f'{_camera_shape}.horizontalFilmAperture', width / 25.4)
+            cmds.setAttr(f'{_camera_shape}.verticalFilmAperture', height / 25.4)
+            cmds.setAttr(f'{_camera_shape}.filmFit', 1)
+
+
     def set_camera_image_plane(self, filepath: str):
         """ 選択しているカメラにカメライメージプレーンを設定 """
         _camera_shape = self.get_camera_shape_from_selection()
@@ -779,8 +828,21 @@ class AppMain:
         cmds.currentTime(headin)
 
 
+
+    def set_masterlayer_enabled(self, value: bool):
+        """ マスターレイヤーの有効/無効を設定
+        
+        Args:
+            value(bool): True: 有効, False: 無効
+        """
+        _rs = renderSetup.instance()
+        _rs._defaultRenderLayer.setRenderable(value)
+
+
+
     def set_render(self, renderer):
         render_globals_node = cmds.ls(type='renderGlobals')[0]
+
         cmds.setAttr(render_globals_node + '.currentRenderer', renderer, type='string')
 
         if renderer == 'vray':
@@ -788,10 +850,14 @@ class AppMain:
                 cmds.shadingNode("VRaySettingsNode", asUtility=True, name = "vraySettings")
         
         elif renderer == 'arnold':
+            cmds.setAttr('defaultRenderGlobals.currentRenderer', 'arnold', type='string')
+
             if not cmds.ls('defaultArnoldRenderOptions'):
                 cmds.shadingNode("aiOptions", asUtility=True, name = "defaultArnoldRenderOptions")
 
         print(f'set render = {renderer}')
+
+
 
     def set_render_framerange(self, first_frame, last_frame):
         renderer = self.get_render()
@@ -816,6 +882,29 @@ class AppMain:
             cmds.setAttr(f'defaultRenderGlobals.startFrame', first_frame)
             cmds.setAttr(f'defaultRenderGlobals.endFrame', last_frame)
 
+
+    def set_render_path(self, value: str):
+        """ レンダーパスを設定
+        
+        Args:
+            value(str): レンダーパス
+        """
+        _renderer = self.get_render()
+
+        if _renderer == 'vray':
+            vray_setting = 'vraySettings'
+            cmds.setAttr(f'{vray_setting}.imageFileNamePrefix', value, type='string')
+
+        elif _renderer == 'arnold':
+            _arnold_render_globals = 'defaultRenderGlobals'
+            cmds.setAttr(f'{_arnold_render_globals}.imageFilePrefix', value, type='string')
+
+        else:
+            _default_render_globals = 'defaultRenderGlobals'
+            cmds.setAttr(f'{_default_render_globals}.imageFilePrefix', value, type='string')
+
+
+
     def set_render_size(self, width, height):
         print(f'set render size = {width} x {height}')
 
@@ -835,6 +924,23 @@ class AppMain:
             cmds.setAttr(f'{default_resolution}.width', int(width))
             cmds.setAttr(f'{default_resolution}.height', int(height))
 
+
+
+    def set_unit(self, unit: str):
+        """ 単位を設定
+        
+        """
+        unit_dict = {
+            'centimeter': 'cm',
+            'millimeter': 'mm',
+            'meter': 'm',
+            'kilometer': 'km',
+        }
+
+        if unit in unit_dict:
+            cmds.currentUnit(linear=unit_dict[unit])
+        else:
+            raise ValueError(f'Invalid unit: {unit}')
 
 
 

@@ -8,7 +8,7 @@ Info:
     * Author : MedakaVFX <medaka.vfx@gmail.com>
  
 Release Note:
-    * v0.0.1 2024-11-15 Tatsuya Yamagishi
+    * v0.0.1 2025-06-16 Tatsuya Yamagishi
         * added: new
 """
 
@@ -16,12 +16,21 @@ VERSION = 'v0.0.1'
 NAME = 'mdk_nuke'
 
 import os
+import pathlib
+import platform
+import re
+import subprocess
 import sys
 
 import nuke
+
 import nukescripts
 
-from PySide2 import QtWidgets
+try: 
+    from PySide6 import QtWidgets
+except:
+    from PySide2 import QtWidgets
+
 
 if os.environ.get('MDK_DEBUG'):
     print('MDK | ---------------------------')
@@ -47,6 +56,7 @@ EXT_DICT = {
 
 FILE_NODES_LIST = ['Read', 'Write', 'ReadGeo2', ]
 
+FILE_FILTER_SCRIPT = re.compile(r'.+\.(py)')
 
 # ======================================= #
 # Functins
@@ -61,7 +71,52 @@ def create_playblast(filepath: str, size: list|tuple=None, range: list|tuple=Non
     """
 
     raise RuntimeError('未実装')
-       
+
+
+def open_dir(filepath) -> None:
+    """
+    フォルダを開く
+    """
+    print(f'Open dir: {filepath}')
+
+
+    _filepath = pathlib.Path(filepath)
+    OS_NAME = platform.system()
+
+    if _filepath.exists():
+        if _filepath.is_file():
+            _filepath = _filepath.parent
+
+        if OS_NAME == 'Windows':
+            cmd = 'explorer {}'.format(filepath.replace('/', '\\'))
+            subprocess.Popen(cmd)
+
+        elif OS_NAME == 'Darwin':
+            subprocess.Popen(['open', _filepath])
+
+        else:
+            subprocess.Popen(["xdg-open", _filepath])
+
+
+def open_in_explorer(filepath: str):
+    """
+    Explorerでフォルダを開く
+    """
+    if os.path.exists(filepath):
+        if platform.system() == 'Windows':
+            filepath = str(filepath)
+            filepath = filepath.replace('/', '\\')
+
+            filebrowser = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
+            subprocess.run([filebrowser, '/select,', os.path.normpath(filepath)])
+        
+        elif platform.system() == 'Darwin':
+            subprocess.call(['open', filepath])
+        
+        else:
+            subprocess.Popen(["xdg-open", filepath])
+    else:
+        raise FileNotFoundError(f'File is not found.')
 
 # ======================================= #
 # Class
@@ -99,13 +154,13 @@ class AppMain:
         Returns:
             PySide2.QtWidgets.QWidget: 'QWidget' Nuke main window.
         """
-        # for _widget in QtWidgets.QApplication.topLevelWidgets():
-        #     if _widget.metaObject().className() == 'Foundry::UI::DockMainWindow':
-        #         return _widget
+        for _widget in QtWidgets.QApplication.topLevelWidgets():
+            if _widget.metaObject().className() == 'Foundry::UI::DockMainWindow':
+                return _widget
             
-        #     raise RuntimeError('Could not find DockMainWindow instance')
+            raise RuntimeError('Could not find DockMainWindow instance')
 
-        return QtWidgets.QApplication.activeWindow()
+        # return QtWidgets.QApplication.activeWindow()
 
     
     # --------------------------------- #
@@ -149,8 +204,7 @@ class AppMain:
             print(f'file = {filepath}')
 
             if os.path.exists(filepath):
-                # dirpath = os.path.dirname(path)
-                self.core.open_in_explorer(filepath)
+                open_in_explorer(filepath)
 
         else:
             for node in nuke.selectedNodes():
@@ -160,12 +214,70 @@ class AppMain:
                     filepath = os.path.dirname(nuke.filename(node))
                     print(f'file = {filepath}')
 
-                    self.core.open_in_explorer(filepath)
+                    open_dir(filepath)
 
 
     def open_file(self, filepath):
         """ Plugin Builtin Function """
         self.file.open_file(self, filepath)
+
+
+    def set_aperture_size(self, width: int, height: int):
+        """ Plugin Builtin Function
+        * アパーチャーサイズを設定
+        """
+        pass
+
+
+    def set_framerange(self, headin: int, cutin: int, cutout: int, tailout: int):
+        """ Plugin Builtin Function
+        * フレームレンジを設定
+        """
+        nuke.root()['first_frame'].setValue(int(headin))
+        nuke.root()['last_frame'].setValue(int(tailout))
+        
+
+
+    def set_fps(self, value: float):
+        """ Plugin Builtin Function
+        * フレームレートを設定
+        """
+        nuke.root()['fps'].setValue(float(value))
+
+
+    def set_render(self, value: str):
+        """ Plugin Builtin Function
+        * レンダー設定を設定
+        """
+        pass
+
+
+    def set_render_framerange(self, first: int, last: int):
+        """ Plugin Builtin Function
+        * レンダー設定を設定
+        """
+        pass
+
+
+    def set_render_size(self, width: int, height: int):
+        """ Plugin Builtin Function
+        * レンダーサイズを設定
+        """
+        pass
+
+
+    def set_renderer_default_settings(self):
+        """ Plugin Builtin Function
+        * レンダー設定を設定
+        """
+        pass
+
+
+    def set_unit(self, value: str):
+        """ Plugin Builtin Function
+        * 単位を設定
+        """
+        pass
 
 
     def save(self):
